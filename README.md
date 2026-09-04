@@ -179,7 +179,9 @@ logs/                           AI Coding 会话日志
 
 | 仓库 | 内容 |
 |---|---|
-| open-vela/nuttx，PR #347（dev-ai-contest-2026） | esp32p4 arch 移植、板级目录与外设驱动 |
+| open-vela/nuttx，PR #364（dev-ai-contest-2026） | esp32p4 arch 移植、板级目录、外设驱动（gt9xx）、CMake 构建支持（接续 #347） |
+| open-vela/nuttx-apps，PR #123（dev-ai-contest-2026） | lvgldemo SignBridge UI：开机画面、摄像头预览（SC2336/CSI）、中文字库 |
+| 本仓库，PR #17 | 文档与状态更新（整体基本完成）、CMake 构建记录、配置增量 |
 | 本仓库 | 应用、模型、词库、板级文档、AI 日志 |
 
 ## 10. AI 辅助说明
