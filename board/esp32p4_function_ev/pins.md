@@ -46,7 +46,7 @@
 | 功能 | 信号 | GPIO |
 |---|---|---|
 | I2C | 与音频/codec 共用 I2C0 | SCL=8 SDA=7 |
-| GT911 I2C 地址 | — | **0x5D**（INT 悬空；0x14 需 INT 拉高） |
+| GT911 I2C 地址 | — | **0x5D**（INT 悬空；0x14 需 INT 拉高）。驱动已支持 0x5D/0x14 自动探测（nuttx PR #364 gt9xx 改动） |
 | 触摸中断 | INT_TP | **不接（NC）**：仅引出到适配板 J6-pin5，需飞线；esp-bsp: BSP_LCD_TOUCH_INT=NC，轮询模式 |
 | 触摸复位 | RESET_TP | **不接（NC）**：适配板 R10 上拉 3V3；esp-bsp: BSP_LCD_TOUCH_RST=NC |
 
@@ -70,5 +70,5 @@
 ## 待真机核对项
 
 - 触摸 GT911 的 INT/RESET 已确认不接（官方 NC，轮询模式）；如需中断驱动，从适配板 J6-pin5（INT_TP）/ J6-pin8（RESET_TP）飞线到空闲 GPIO 并改 esp32p4_touch.c 回调（J6 引脚号为 VLM 识别，中等置信度，飞线前用万用表复核）
-- 触摸坐标方向：esp-bsp 配置了 mirror_x/mirror_y=1，NuttX gt9xx 驱动不做镜像，真机需验证触摸坐标与显示坐标是否一致
-- 摄像头 SCCB 是否与显示/音频确为同一 I2C 物理总线
+- 触摸坐标方向：esp-bsp 配置了 mirror_x/mirror_y=1，NuttX gt9xx 驱动不做镜像，真机需验证触摸坐标与显示坐标是否一致（可用 gt9xx 驱动新增的事件计数器 ioctl 辅助核对）
+- 摄像头 SCCB 复用 I2C0（地址 0x3c）：软件链路已按此实现（lvgldemo camera 模块，nuttx-apps PR #123），真机联调时最终确认

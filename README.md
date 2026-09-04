@@ -15,9 +15,11 @@
 语音活动检测与手语动画回放。全部推理与媒体处理在端侧完成，无云端依赖。
 
 ESP32-P4-Function-EV-Board 在 openvela 上此前无板级支持。本项目的工作
-分两部分：板级移植（arch 接线、外设驱动、显示/音频/摄像头链路）与上层
-应用（识别、播报、界面、低功耗）。板级代码位于 nuttx 公共仓，按大赛
-指南以 PR 形式提交（open-vela/nuttx PR #347）；应用与文档位于本仓库。
+分两部分：板级移植（arch 接线、外设驱动、显示/音频/摄像头链路、CMake
+构建支持）与上层应用（识别、播报、界面、低功耗）。板级代码位于 nuttx
+公共仓，按大赛指南以 PR 形式提交（open-vela/nuttx PR #364，接续已关闭
+的 #347）；应用界面/摄像头演示位于 nuttx-apps（PR #123）；作品应用与
+文档位于本仓库。
 
 ## 2. 硬件环境
 
@@ -26,9 +28,9 @@ ESP32-P4-Function-EV-Board 在 openvela 上此前无板级支持。本项目的�
 | 主控 | ESP32-P4，双核 RISC-V 400MHz，32MB PSRAM | — | — |
 | 无线 | ESP32-C6-MINI-1（WiFi6/BLE5） | SDIO（GPIO14–19） | 云端纠错预留通路 |
 | 显示 | 7 寸 1024×600，EK79007AD + EK73217BCGA | MIPI-DSI 2 lane | 专用物理引脚 |
-| 触摸 | GT911 | I2C0（SCL=8/SDA=7），地址 0x5D | INT/RESET 板上未接，轮询模式 |
+| 触摸 | GT911 | I2C0（SCL=8/SDA=7） | INT/RESET 板上未接，轮询模式；驱动支持 0x5D/0x14 自动探测 |
 | 音频 | ES8311 codec + NS4150 功放 | I2S0 + I2C0（地址 0x18） | 功放使能 GPIO53 |
-| 摄像头 | SC2336 2MP | MIPI-CSI 2 lane，SCCB 复用 I2C0（地址 0x3c） | 控制面已通，数据面待验证 |
+| 摄像头 | SC2336 2MP | MIPI-CSI 2 lane，SCCB 复用 I2C0（地址 0x3c） | CSI 驱动+预览链路已实现（lvgldemo），整机联调待复验 |
 | 控制台 | UART0 | TX=37 / RX=38，115200 | — |
 
 I2S0 引脚：BCLK=12，MCLK=13，WS=10，DOUT=9，DIN=11。
@@ -79,8 +81,9 @@ I2S0 引脚：BCLK=12，MCLK=13，WS=10，DOUT=9，DIN=11。
 
 1. **触摸采用轮询模式**。该板 GT911 的 INT/RESET 未连接至主控（仅引出
    至屏幕适配板 J6 排针），经原理图与 esp-bsp 源码交叉核实。驱动将
-   irq 回调置空，read 路径直接 I2C 读状态寄存器；INT 悬空使器件
-   上电锁存地址 0x5D。
+   irq 回调置空，read 路径直接 I2C 读状态寄存器；地址支持 0x5D/0x14
+   自动探测（Kconfig 可选），兼容 INT 悬空锁存 0x5D 与外部拉高改 0x14
+   两种硬件形态。
 2. **I2C0 单总线挂三设备**（触摸/音频/摄像头），为硬件设计既定，
    驱动按共享总线实现，400kHz。
 3. **分类器权重自定义二进制格式**（magic + 版本 + 层参数 + INT8 权重
@@ -189,4 +192,7 @@ logs/                           AI Coding 会话日志
 开发全程使用 AI 辅助，会话记录见 `logs/`。主要投入：板级移植期的
 构建错误定位（fork 与上游 API 差异、esp-hal 版本锁定）；触摸接线与
 I2C 地址考证；模型量化格式与板端加载设计；checkpatch 与提交规范的
-批量合规修复。
+批量合规修复；CMake 构建链路修复与全流程验证（HAL 拉取/补丁、
+多脚本 LD_SCRIPT、mkimage 出 bin）；gt9xx 驱动 I2C 健壮性增强
+（实测驱动的重试/恢复策略与事件统计）；以及跨仓 PR 的 CLA 合规
+与提交规范梳理。
