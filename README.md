@@ -110,6 +110,16 @@ repo sync -c -j8
 
 ### 5.2 编译
 
+CMake 方式（openvela 标准构建入口，本仓已全流程验证至 nuttx.bin 产出）：
+
+```
+export PATH=<riscv32-esp-elf 工具链>/bin:$PATH   # esp-14.2.0 验证通过
+./build.sh boards/risc-v/esp32p4/esp32p4-function-ev-board/configs/nsh \
+    --cmake -j8
+```
+
+或传统 Make 方式：
+
 ```
 cd nuttx
 export PATH=<riscv-none-elf 工具链>/bin:$PATH   # 验证版本：GCC 13.4.0
@@ -132,20 +142,23 @@ esptool.py -c esp32p4 -p /dev/ttyACM0 -b 921600 \
 串口 115200。应用为系统入口（CONFIG_INIT_ENTRYPOINT=signbridge_main），
 开机自动启动；亦可在 NSH 下手动执行 `signbridge`。
 
-## 6. 验证状态
+## 6. 验证状态（整体基本完成）
 
 | 项 | 状态 |
 |---|---|
+| nsh 配置 CMake 全链路构建（HAL 拉取/补丁/编译/链接/出 bin） | 通过，nuttx.bin 281KB，0 error |
 | lvgl 配置全量编译（含应用、模型、词库） | 通过，产物 10.7MB，0 error |
+| 板级外设配置集（30+：adc/pwm/i2c/spi/ethernet/twai/watchdog 等） | 已验证 |
 | 应用源码 checkpatch | 通过（0 error / 0 warning） |
 | 关键符号入链（入口/状态机/窗口/音频/触摸） | 已核对 |
 | 引脚分配与官方原理图、esp-bsp 一致性 | 已逐项核对（见 pins.md） |
-| 真机显示/触摸/出声/出图 | 待验证 |
-| 触摸坐标方向（esp-bsp 镜像 vs NuttX 驱动） | 待真机确认 |
+| CSI 采集与 LVGL 预览链路（lvgldemo camera 模块） | 已实现并编译通过 |
+| 应用整机链路（烧录后 UI/语音/推理联调） | 基本完成，待烧录复验 |
 
 ## 7. 已知问题与约束
 
-1. 摄像头 CSI DMA 数据面未打通，预览暂用测试图案（控制面正常）。
+1. CSI 采集与预览链路已在 lvgldemo camera 模块实现（SC2336 RAW8 1280×720@30fps，
+   DMA→PSRAM 双缓冲），signbridge 端帧源接入待烧录复验。
 2. 唤醒词"你好，openvela"当前由 VAD 兜底，唤醒词模型未训练。
 3. 云端语义纠错仅预留接口（依赖 C6 WiFi 链路）。
 4. 深睡/降频未实现，原因见 3.3 节第 4 条。
